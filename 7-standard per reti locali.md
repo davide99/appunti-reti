@@ -31,7 +31,7 @@
 ### Switch
 * Utilizza Store And Forward
 * **LAN estesa**: LAN interconnessa tramite switch
-* Annulla probabilità di collisioni => la rete diventa a commutazione di pacchetto
+* Annulla probabilità di collisioni => la rete diventa a commutazione di pacchetto => ethernet solo per framing
 
 #### Transparent switching
 - **Address learning**:
@@ -68,13 +68,13 @@
 		* Aggiunta di **NAV** (Network Access Vector): tempo in cui gli altri evitano di trasmettere, perchè altra trasmissione già in corso
 	* Stazioni half-duplex
 
-### Problema del terminale nascosto
+### Problema delle stazioni nascoste
 *Problema*:
 * A e B a portata dell'AP
 * A e B non a portata reciproca
 * Se A o B trasmette l'altra sente comunque canale libero
 
-*Soluzione*: **DFC con handshaking**
+*Soluzione*: **DCF con handshaking**
 1. Stazione trasmette microtrama **RTS** (Request To Send) all'AP
 	* Contiene durata trasmissione dati
 1. AP risponde dopo SIFS con microtrama **CTS** (Clear To Send)
