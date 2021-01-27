@@ -1,8 +1,8 @@
 # Protocolli di accesso per reti locali (LAN)
 
-* Canale condiviso da più utilizzatori
+* Canale condiviso da più utilizzatori (accesso multiplo)
 * Necessario protocollo di accesso:
-    * Ad **accesso casuale / contesa**:
+    * Ad **accesso casuale / con contesa**:
         * Aloha
         * CSMA
     * Ad **accesso ordinato / senza contesa**:
@@ -18,7 +18,7 @@
 * In caso di collisione si esegue **backoff**:
     1. I due nodi in collisione si fermano per periodo di tempo casuale
     1. Inviano di nuovo
-    1. Se collidono di nuovo si raddoppia tempo di attesa casuale
+    1. Se collidono di nuovo si raddoppia tempo di backoff
 
 ## Aloha slotted
 * Evoluzione di Aloha con introduzione di time slot
@@ -60,7 +60,7 @@
 Mezzi radio di solito half duplex => non posso ascoltare mentre trasmetto => no CSMA/CD
 
 **Funzionamento trasmettitore**:
-* Ascola canale per un tempo DIFS (**Distributed Interface Space**)
+* Ascolta canale per un tempo DIFS (**Distributed Interface Space**)
 * Se libero inizia la trasmissione
 * Se occupato (o lo diventa durante DIFS):
     * Aspetta un tempo di backoff
@@ -71,7 +71,7 @@ Se si genera collisione nuovamente, le stazioni raddoppiano il backoff.
 
 **Funzionamento ricevitore**:
 * Verifica correttezza
-* Aspetta un tempo SIFS (**Short**)
+* Aspetta un tempo SIFS (**Short**) < DIFS
 * Invia ACK
 
 **Funzionamento trasmettitore in attesa di ACK**:
