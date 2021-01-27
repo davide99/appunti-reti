@@ -52,18 +52,18 @@ Per effettuare l'instradamento servono:
 * Periodicamente ogni nodo scambia con i vicini un vettore (**DV**), contiene:
 	* Nodi raggiungibili
 	* Costo per raggiungerli
-* Eventualmente chi riceve il **DV** aggiorna la sua routing table
+* Eventualmente chi riceve il **DV** aggiorna la sua tabella delle distanze (e la routing table)
 * Algoritmi iterativi:
 	* Continuano a scambiare informazioni fin quando non convergono
 	* Poco scalabili
 	* Lenti a convergere
+		* Se costo di un canale:
+			* Si abbassa => cambiamento recepito velocemente
+			* Si alza => tempi di convergenza potrebbero essere elevati
 	* Propagazione di errori di routing
 * Ogni nodo possiede **tabella delle distanze**:
 	* Contiene costi verso ogni destinazione tramite ogni vicino
 	* Costo = costo per arrivare al vicino + costo minimo dal vicino alla destinazione
-* Se costo di un canale:
-	* Si abbassa => cambiamento recepito velocemente
-	* Si alza => tempi di convergenza potrebbero essere elevati
 
 ### Confronto
 - **Complessità dei messaggi**:
