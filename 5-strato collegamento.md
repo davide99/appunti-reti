@@ -100,5 +100,5 @@ Le funzioni dello strato collegamento sono:
 		* Utilizzato per specificare il protocollo di livello superiore
 * (*) Essendo 63 protocolli pochi, due alternative:
 	* Se si usa Ethernet si usa il campo "EtherType"
-	* Se si usa 802.3 "EtherType" => "Legth":
+	* Se si usa 802.3 "EtherType" => "Length":
 		* Dev'essere aggiunta a LLC una PDU (campi) detta **SNAP** per identificare ulteriori protocolli
