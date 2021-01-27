@@ -22,6 +22,7 @@ Campi (più importanti):
 ### Campi modificati da un router
 * TTL
 * Checksum
+* (Vedere NAT)
 
 ## Addressing
 
@@ -82,7 +83,7 @@ Tre tipi di entry nella routing table:
 	* Dal server al client
 	* **IP destinazione**: broadcast:68
 	* **IP sorgente**: server:67
-	* **yiaddress**: Ip proposto
+	* **yiaddress**: IP proposto
 
 1. **DHCP request**:
 	* Dal client al server
