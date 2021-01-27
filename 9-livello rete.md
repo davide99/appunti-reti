@@ -105,4 +105,6 @@ Tre tipi di entry nella routing table:
 * Campi:
 	* Tipo
 	* Codice
+	* Checksum
+	* Primi 8 byte del pacchetto IP che l'ha generato
 * Es. ping: echo request & echo reply
