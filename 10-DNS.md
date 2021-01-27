@@ -76,4 +76,4 @@ Tipi più importanti:
 	* **Query**
 	* **Reply**
 * Entrambi con stesso formato
-* Contengono identificativo trasnazione
+* Contengono identificativo transazione
