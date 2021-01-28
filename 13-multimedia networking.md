@@ -1,3 +1,5 @@
+# Multimedia networking
+
 Con Multimedia intendiamo contenuti di tipo diverso, come audio o video.
 L'audio è un segnale analogico che deve essere campionato e quantizzato prima di poter essere trasmesso in rete, formati famosi sono CD o MP3.
 Il video è una sequenza di immagini statiche rappresentate ad una velocità costante. Può essere presente una ridondanza spaziale o temporale per ridurre il numero di bit e mandare solo quelli che sono cambiati (temporale) o mandare un'informazione sul valore di un pixel e quante volte si ripete (spaziale). Il video può avere bitrate costante (CBR) o variabile (VBR).
