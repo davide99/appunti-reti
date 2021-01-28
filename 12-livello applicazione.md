@@ -10,7 +10,6 @@ I protocolli a livello applicazione definiscono:
 	* Significato dei vari campi
 
 ## HTTP
-* Su TCP
 * Porta 80 del server
 * Porta random del client
 * È **stateless**:
@@ -154,8 +153,8 @@ Tre alternative:
 		1. Peer manda al successore "Chi è responsabile di \<hash>?"
 		1. Messaggio scambiato da successore in successore
 		1. Arriva al responsabile
-		1. Risponde mandando lista peer del torrent
-	* Ricerca è O(N):
+		1. Risponde mandando lista peer del torrent (come tracker)
+	* Ricerca è `O(N)`:
 		* Introdotti shortcut: ogni peer conosce anche peer a distanza potenza del 2
 		* Ricerca di un peer diventa logaritmica
 	* Quando un peer abbandona rete DHT:
