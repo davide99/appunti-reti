@@ -6,7 +6,7 @@ Servizi offerti dal livello trasporto:
 1. Controllo di congestione (traffico rete)
 1. Controllo di flusso (traffico nodo destinatario)
 1. Nessuna garanzia su banda / ritardi:
-	* È una rete a pacchetto, non a circuito
+	* È a commutazione di pacchetto, non a commutazione di circuito
 
 ## Protocolli di livello 4
 * **TCP**
@@ -34,13 +34,11 @@ Servizi offerti dal livello trasporto:
 	* Interfaccia tra due processi in rete
 	* Coppia (IP, # porta)
 * **UDP**
-	* Bisogna specificare solamente socket di destinazione
-	* Flusso unidirezionale
-	* In ricezione UDP inoltra payload verso processo associato a quella porta
+	* Flusso half-duplex
+	* In ricezione UDP inoltra payload verso processo in ascolto su quella porta
 - **TCP**
-	* Bisogna specificare socket destinazione e socket sorgente
-	* Flusso bidirezionale
-	* In ricezione TCP inoltra payload verso processo associato a quel socket
+	* Flusso full-duplex
+	* In ricezione TCP inoltra payload verso processo in ascolto su porta destinazione + socket sorgente
 
 ## UDP
 * Servizio best effort:
@@ -72,7 +70,6 @@ Servizi offerti dal livello trasporto:
 * Point-to-point
 * Trasferimento affidabile e in ordine
 * Controllo di flusso / congestione
-* Comunicazione full-duplex
 * Connection-oriented (handshake)
 
 ### Segmento TCP
@@ -111,7 +108,7 @@ Servizi offerti dal livello trasporto:
 **Evento** => **Azione**
 
 - Arriva segmento in ordine, segmenti precedenti tutti ACKed => 
-	* Ack ritardato: aspetta altri segmenti per 500ms
+	* ACK ritardato: aspetta altri segmenti per 500ms
 	* Se non arriva niente manda ACK
 
 - Arriva segmento in ordine, solo segmento precedente non ACKed =>
@@ -204,10 +201,7 @@ Ovvero la connessione viene chiusa in due fasi.
 
 ## Principi di controllo della congestione
 * Si vuole evitare di sovraccaricare la rete
-* Due soluzioni:
-	1. Coinvolgere gli apparecchi di livello 3 (router)
-	1. Controllo di congestione solo a livello end-system
-* Utilizzato secondo approccio:
+* Controllo di congestione a livello end-system:
 	* Concetto di **finestra di congestione** della rete:
 		* "Buffer" offerto dalla rete
 		* Dedotta da ritardi e perdite
@@ -222,6 +216,7 @@ Algoritmo **additive increase - multiplicative decrease** (**AIMD**)
 Nel caso di connessione TCP appena aperta:
 * *Problema*: Arrivare alla `cwnd` "di picco" è lento con *AIMD*
 * *Soluzione*: Algoritmo dello **slow start**:
+	1. `cwnd=1` 
 	1. Si raddoppia `cwnd` per ogni RTT (crescita esponenziale)
 	1. Se avviene perdita:
 		- **Dovuta a timeout**:
