@@ -1,80 +1,154 @@
+# Livello trasporto
+
 Servizi offerti dal livello trasporto: 
-1) Multiplexing e demultiplexing;
-2) Controllo di congestione, per evitare di sovraccaricare la rete;
-3) Controllo di flusso, per evitare di sovraccaricare il destinatario;
-4) Trasferimento affidabile, perchè IP non lo fornisce ma è un protocollo best effort.
-NON vengono offerte garanzie sul ritardo o sulla banda.
+1. Multiplexing e demultiplexing
+1. Comunicazione end-to-end
+1. Controllo di congestione (traffico rete)
+1. Controllo di flusso (traffico nodo destinatario)
+1. Nessuna garanzia su banda / ritardi:
+	* È una rete a pacchetto, non a circuito
 
-I principale protocolli usati a livello 4 sono UDP (User Datagram Protocol) che è connectionless e TCP (Transmission Control Protocol) che è connection-oriented.
-Entrambi forniscono 1, ma solo TCP fornisce 2,3,4.
-A livello 4 non sono presenti apparati di rete perchè i protocolli lavorano nei terminali finali, che eseguono la segmentazione e passano i segmenti a livello rete. Qualsiasi protocollo venga implementato (TCP o UDP), a livello rete non fa differenza perchè sono tutti trattati come datagram IP.
-La principale differenza con il livello rete è che il livello rete lavora su una comunicazione logica tra host, il livello trasporto su una comunicazione tra processi in esecuzione sugli host.
+## Protocolli di livello 4
+* **TCP**
+* **UDP**
 
-			MULTIPLEXING / DEMULTIPLEXING
+## Multiplexing e demultiplexing
+```
+0              16           31
++-------------+------------+
+| Source port | Dest. port |  <=  Comuni a TCP e UDP
++-------------+------------+
+:                          :
+.    Altri campi header    .
+:                          :
++--------------------------+
+|                          |
+|         Payload          |
+|                          |
++--------------------------+
+```
 
-Ai dati ricevuti dalle applicazioni viene aggiunta un'intestazione a livello di trasporto e passata ai livelli inferiori. In particolare l'intestazione TCP/UDP viene incapsulata nei datagram IP e mandata in rete. In ricezione, grazie alle informazioni contenute nell'intestazione aggiunta dal livello di trasporto si può indirizzare il traffico verso l'applicazione corretta. Come viene ottenuto ciò? Grazie alle porte, ovvero degli identificativi legati al processo in esecuzione (ad esempio 80=HTTP, 22=SSH).
-C'è una differenza nel modo in cui viene fatto mux/demux in base al protocollo TCP o UDP.
-Introduciamo la definizione di socket, ovvero un'interfaccia di comunicazione tra due processi in rete, identificata da (IP, #porta).
-- Caso UDP: Quando un pacchetto viene mandato bisogna specificare solamente la socket di destinazione. In fase di ricezione UDP controlla il numero di porta e inoltra il pacchetto verso il processo.
-- Caso TCP: Non basta specificare solo la socket di destinazione ma serve anche quella sorgente. 
-Questo perchè TCP in quanto effettua controllo di flusso e congestione deve mantenere diversi parametri per ogni connessione nel caso dovesse effettuare modifiche su una specifica comunicazione. Inoltre su un host ci potrebbero essere più socket TCP, ma con 4 parametri sono identificate univocamente nella rete, es. i web server hanno una socket per ogni client connesso, in questo caso ci sono più socket per un'applicazione.
+* Livello trasporto aggiunge porta sorgente e destinazione
+* I flussi vengono multiplati/demultiplati grazie al numero di porta
+* **Socket**:
+	* Interfaccia tra due processi in rete
+	* Coppia (IP, # porta)
+* **UDP**
+	* Bisogna specificare solamente socket di destinazione
+	* Flusso unidirezionale
+	* In ricezione UDP inoltra payload verso processo associato a quella porta
+- **TCP**
+	* Bisogna specificare socket destinazione e socket sorgente
+	* Flusso bidirezionale
+	* In ricezione TCP inoltra payload verso processo associato a quel socket
 
-Ci sono delle porte che sono riservate a diversi scopi e processi ben definiti, ad esempio 53=DNS(UDP), 67=DHCP(UDP), 25=SMTP(TCP), queste porte sono dette well-known ports e hanno un range 0-1024.
-Le porte di un client in genere sono selezionate random.
+## UDP
+* Servizio best effort:
+	* Trasferimento inaffidabile
+		* I pacchetti possono andare persi
+	* Trasferimento non ordinato
+		* I pacchetti possono arrivare fuori sequenza
+	* Affidabile quanto IP
+	* Nessun controllo di flusso / congestione
+* Connectionless
 
-			UDP
-UDP offre un servizio best effort in cui i pacchetti possono andare persi o essere consegnati fuori sequenza.
-			Intestazione UDP
-src port# (16), dst port#(16)
-length (16), checksum (16)
-payload
+### Segmento UDP
+```
+0              16           31
++-------------+------------+
+| Source port | Dest. port |
++-------------+------------+
+|   Length    |  Checksum  |
++-------------+------------+
+|                          |
+|         Payload          |
+|                          |
++--------------------------+
+```
 
-Nel campo length è specificata la lunghezza in byte del segmento incluso l'header.
-Il checksum è effettuato su tutto il segmento. (In IP solo sull'header). Serve a riconoscere eventuali errori durante il trasferimento.
-Rende possibile Multicast IP. Su TCP non è possibile (spiegato dopo).
+**NB**: Il multicast/broadcast è possibile solo con UDP. Con TCP non posso mantenere informazioni di stato per ogni host per poter effettuare controllo di flusso/sequenza.
 
-		TCP
-Protocollo point-to-point, multicast non è possibile perchè dovrei mandare lo stesso pacchetto allo stesso modo verso il gruppo di host multicast. Visto che devo mantenere informazioni sulle connessioni per poter effettuare controllo di flusso e di sequenza, se un host dovesse dare problemi dovrei decidere come adattare i parametri della connessione e sarebbe un problema.
+## TCP
+* Point-to-point
+* Trasferimento affidabile e in ordine
+* Controllo di flusso / congestione
+* Comunicazione full-duplex
+* Connection-oriented (handshake)
 
-I pacchetti sono mandati in ordine, c'è controllo di flusso e di congestione e la comunicazione è full-duplex. Protocollo orientato alla connessione grazie all'handshaking.
+### Segmento TCP
+![](img/TCP.png)
+* **Sequence number**:
+	* Offset corrente in byte
+	* Rispetto all'inizio dello stream
+	* Inizializzato a numero casuale
+* **ACK number**:
+	* Prossimo *sequence number* che il ricevitore si aspetta
+	* Cumulativo
+	* Possibilità di *piggyback*
+* **Flag**:
+	* **ACK**: *ACK number* valido?
+	* **SYN**: Apertura connessione
+	* **FIN**: Chiusura connessione
+* **Receive window**: Per controllo flusso
+* **Opzioni**:
+	* **MSS** (Maximum Segment Size)
 
-			INTESTAZIONE TCP
-src port# (16), dst port#(16)
-sequence number
-ack number
-header length, flag come ACK(validità di ack),SYN,FIN per instaurare o chiudere la connessione, receive window (per controllo flusso)
-checksum (come udp) 
-opzioni, come MSS (Maximum Segment Size)
-payload
-
-				SEQUENCE NUMBER E ACK NUMBER
-- Il sequence number indica la posizione, all'interno dello stream, del primo byte nel segmento. È inizializzato ad un numero casuale.
-- L'acknowledgement number indica il prossimo numero di sequenza che ci si aspetta (usa ack cumulativo).
-I segmenti ricevuti fuori sequenza non sono gestiti di default, nel senso che TCP lascia l'implementazione libera; Go-Back-N ad esempio li scartava.
-Mandando ACK insieme ai dati sto implementando il cosiddetto piggybacking.
+**NB**: I segmenti ricevuti fuori sequenza possono essere scartati o meno, implementazione libera.
 		
-			TRASPORTO SICURO
-TCP crea un servizio di trasporto affidabile sopra l'inaffidabile IP. Eventuali ritrasmissioni scattano dopo ACK duplicati o fine timeout.
-Il timeout è unico come Go-Back-N, se scade viene mandato il segmento che ha causato il timeout. Se si riceve un ACK e ci sono segmenti non ancora confermati riparte il timer.
-Al ricevitore possono succedere diversi eventi con gli ACK: 
-EVENTO -> AZIONE
-- Segmento con seq# che mi aspettavo, dati precedenti ricevuti in modo corretto e confermati ==> Ack ritardato. Aspetta altri dati per 500ms e se non mi arriva niente manda Ack.
+## Funzionamento lato trasmettitore
+1. Crea segmento con `seq #` adeguato
+1. Invia segmento
+1. Fa partire timer se non c'è già altro timer
+	* Timer sull'ultimo segmento unacked
+1. Se timeout:
+	1. Ritrasmette segmento che l'ha causato
+	1. Riavvia timer
+1. Se riceve ACK:
+	1. Effettua acknowledge
+	1. Fa partire timer su segmento unacked più vecchio
 
-- Tutto in ordine, un segmento aveva ACK pendente (situazione precedente) ==> Mando subito ACK e confermo questo e quello prima perchè ACK cumulativo (Risparmio 1 Ack).
-ACK ritardato != Cumulativo; Ritardato ha senso solo se uso cumulativi.
+## Funzionamento lato ricevitore (generazione ACK)
+**Evento** => **Azione**
 
-- Segmento fuori sequenza. seq# maggiore di quello che mi aspettavo, c'è un gap ==> Invio subito ACK con seq# che mi aspettavo prima.
-Es: mi aspettavo#3, arriva#5 ==> invio di nuovo ACK #3
+- Arriva segmento in ordine, segmenti precedenti tutti ACKed => 
+	* Ack ritardato: aspetta altri segmenti per 500ms
+	* Se non arriva niente manda ACK
 
-- Segmento che completa il gap parzialmente o totalmente ==> mando subito ACK. Riprende tutto a funzionare normalmente
+- Arriva segmento in ordine, solo segmento precedente non ACKed =>
+	* Manda subito ACK cumulativo per entrambi
 
-Un altro modo per attuare il controllo sicuro è quello del fast retransmit, ovvero nel momento in cui mi accorgo di segmenti persi trasmetto subito senza aspettare il timeout. Dopo aver mandato diversi pacchetti, se arrivano i cosiddetti "tripli duplicati ACK", ovvero se il trasmettitore riceve 4 ACK (1 originale + 3 duplicati) per gli stessi dati è molto probabile che il segmento sia stato perso, allora trasmette subito il segmento con il seq# non ancora confermato.
-Il timeout non deve essere troppo breve o troppo corto, il problema è che il RTT varia, allora si fa una stima con una media mobile esponenziale, in cui l'influenza del passato decresce esponenzialmente -> stima=(1-a)*stima + a*campione di rtt, a tipicamente 0.125, se =0 considero solo passato, =1 solo presente. Alla stima si aggiunge un margine di sicurezza = (1-b)*margine + b*|campione-stima|, tipicamente b=0.25
+- Arriva segmento fuori sequenza: `seq #` maggiore di quello che mi aspettavo, c'è gap =>
+	* Invio ACK con `seq #` che mi aspettavo prima (*ACK duplicato*)
+	* Es: aspettavo `#3`, arriva `#5` => invio di nuovo ACK `#3`
 
-			CONTROLLO DI FLUSSO
-Viene evitato di sovraccaricare il ricevitore. Ogni ricevitore ha un buffer e fa sapere la quantità di buffer libero attraverso un parametro incluso nell'header TCP (rwnd = receive window). Il trasmettitore adatta la sua finestra di trasmissione ad essere <= di rwnd.
+- Arriva segmento che completa gap parzialmente o totalmente (segmento che fa spostare la finestra) =>
+	* Mando ACK
 
-			GESTIONE DELLA CONNESSIONE
+## Fast retransmit
+* Tempi di timout relativamente lunghi
+* Passa del tempo prima di ritrasmettere segmento perso
+* Rilevo segmenti persi con i **tripli ACK duplicati**
+
+**Funzionamento**
+* Ricevo per 3 volte ACK duplicati (1 ACK "normale" + 3 duplicati)
+* Probabilmente segmento perso
+* Trasmetto subito segmento con `seq #` non ancora ACKed
+
+## Scelta del timeout
+* Il timeout dipende dall'RTT
+* L'RTT varia =>
+* Si stima l'RTT con una media mobile esponenziale:
+	* L'influenza del passato decresce esponenzialmente
+
+## Controllo di flusso
+* Evita di sovraccaricare il nodo ricevitore
+* Ogni ricevitore:
+	* Ha un buffer
+	* Spazio libero nel buffer di dimensione `rwnd`
+	* Comunica al trasmettire `rwnd` nel campo *receive window* dell'header TCP
+* Trasmettitore adatta la sua finestra di trasmissione: `twnd<=rwnd`
+
+## Gestione della connessione
 La connessione viene instaurata con il cosiddetto "Handshake" in cui ci si mette d'accordo sullo stabilire la connessione e sui parametri di quest'ultima. Spesso ci si riferisce a questa procedura con SYN-SYNACK-ACK per i flag settati.
 1) host sceglie randomicamente il seq# e manda un pacchetto (SYN) vuoto con il flag SYN=1;
 2) server sceglie un seq#, manda un pacchetto (SYNACK) con ACK=1, SYN=1 e con ACK# settato al seq# che ci si aspetta (fa piggybacking);
