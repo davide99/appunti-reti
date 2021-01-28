@@ -145,36 +145,103 @@ Servizi offerti dal livello trasporto:
 * Ogni ricevitore:
 	* Ha un buffer
 	* Spazio libero nel buffer di dimensione `rwnd`
-	* Comunica al trasmettire `rwnd` nel campo *receive window* dell'header TCP
+	* Comunica al trasmettitore `rwnd` nel campo *receive window* dell'header TCP
 * Trasmettitore adatta la sua finestra di trasmissione: `twnd<=rwnd`
 
 ## Gestione della connessione
-La connessione viene instaurata con il cosiddetto "Handshake" in cui ci si mette d'accordo sullo stabilire la connessione e sui parametri di quest'ultima. Spesso ci si riferisce a questa procedura con SYN-SYNACK-ACK per i flag settati.
-1) host sceglie randomicamente il seq# e manda un pacchetto (SYN) vuoto con il flag SYN=1;
-2) server sceglie un seq#, manda un pacchetto (SYNACK) con ACK=1, SYN=1 e con ACK# settato al seq# che ci si aspetta (fa piggybacking);
-3) dopo aver ricevuto il messaggio SYNACK il client sa che il server è live e manda un pacchetto (che potrebbe già contenere dati) con flag ACK=1 e ACK# settato al seq# che ci si aspetta.
-Dopo aver ricevuto ACK il server sa che il client è live.
 
-Per chiudere la connessione viene mandato un messaggio con FIN=1. Da quel momento chi ha mandato FIN=1 non può più mandare ma può ancora ricevere; l'altro può ancora fare entrambe.
-L'altro manda FIN=1 e non può più mandare dati. Il primo conferma la ricezione con ACK e la connessione viene chiusa. 
+### Apertura connessione
+Meccanismo del **3-way handshake**:
+* Negoziazione parametri
+* Spesso definita anche come **SYN-SYNACK-ACK** per i flag settati
 
-		PRINCIPI DI CONTROLLO DELLA CONGESTIONE
-Ci potrebbero essere due soluzioni:
-1) Coinvolgere gli apparecchi di livello 3
-2) controllo di congestione solo a livello di end-system.
-Scelta la seconda soluzione altrimenti si andrebbe a gravare troppo sui router.
-TCP su ogni end-system stima una finestra di congestione fittizia dedotta da ritardi o perdite.
+![3way](img/3-way.TCP.png)
 
-		CONTROLLO DI CONGESTIONE IN TCP
-Un algoritmo è congestion avoidance (additive increase - multiplicative decrease). Il trasmettitore continua ad incrementare la cwnd (congestion window - la finestra di congestione fittizia) di 1 MSS(Max Segment Size, definito sopra nell'intestazione TCP) per ogni RTT fino a quando non rileva una perdita, in quel caso la finestra viene dimezzata. 
-Il rate è circa cwnd/RTT byte/sec.
+1. Client
+	1. Sceglie randomicamente `Seq#=x`
+	1. Manda un segmento **SYN** con:
+		* `SYNbit=1`
+		* `Seq=x`
+		* Payload vuoto
+1. Server
+	1. Sceglie randomicamente `Seq#=y`
+	1. Manda un segmento **SYNACK** con:
+		* `ACKbit=1`
+		* `SYNbit=1`
+		* `ACK#=x+1` (piggybacking)
+		* `Seq#=y`
+		* Payload vuoto
+1. Client
+	* Manda un segmento **ACK** con:
+		* `ACKbit=1`
+		* `ACK#=y+1` (piggybacking)
+		* `Seq#=x+1`
+		* Payload eventualmente non vuoto
+		
+### Chiusura connessione
+1. Host A
+	1. Manda un segmento **FIN** con:
+		* `FINbit=1`
+		* `Seq#=x`
+	1. Ha chiuso la sua connessione verso B: può solo ricevere
+1. Host B
+	1. Manda un segmento **ACK** con:
+		* `ACKbit=1`
+		* `ACK#=x+1`
+	1. B può ancora trasmettere ad A
+1. Eventualmente B trasmette dati ad A
+1. Host B
+	1. Manda un segmento **FIN** con:
+		* `FINbit=1`
+		* `Seq#=y`
+	1. B non può più inviare dati ad A
+1. Host A
+	1. Manda un segmento **ACK** con:
+		* `ACKbit=1`
+		* `ACK#=y+1`
 
-Un secondo algoritmo è slow start, usato perchè con congestion avoidance la rete può essere molto lontana dalla congestione e quindi crescendo linearmente si arriva lentamente.
-Una volta che inizia la connessione, si aumenta cwnd esponenzialmente fino alla prima perdita. In questo caso dipende cosa ha fatto rilevare la perdita:
-- 3 ACK duplicati: Segmenti persi ma comunque ricevo ancora gli ACK, il traffico ancora viaggia sulla rete, si va verso la congestione ma ancora la situazione non è grave, ha senso dimezzare cwnd, cresco linearmente. ==> vado in congestion avoidance.
-- Timeout, i segmenti potrebbero essere persi o non arrivare proprio e non ricevo neanche più gli ACK.
-la situazione è più grave e la congestione è elevata. Cwnd viene settata a 1 per ricominciare da capo con slow start. Slow start procede fino ad un certo treshold (soglia) che è stato settato quando è scattato il timeout al valore cwnd/2. Dopo continuo con congestion avoidance.
+Ovvero la connessione viene chiusa in due fasi.
 
-	FAIRNESS
-TCP si definisce come un protocollo fair, ovvero se K connessioni TCP usano lo stesso algoritmo condividendo lo stesso canale che ha un collo di bottiglia a un rate R, tutte le connessioni vanno a R/K (mediamente), perchè man mano che mandano, con il multiplicative decrease la finestra inizia a stabilizzarsi attorno a un valore medio.
-Se invece ci fosse una connessione UDP, che non effettua congestion avoidance, quando TCP decrementa la sua finestra di congestione, UDP usa ancora più banda essendocene più libera dopo il dimezzamento di TCP.  
+## Principi di controllo della congestione
+* Si vuole evitare di sovraccaricare la rete
+* Due soluzioni:
+	1. Coinvolgere gli apparecchi di livello 3 (router)
+	1. Controllo di congestione solo a livello end-system
+* Utilizzato secondo approccio:
+	* Concetto di **finestra di congestione** della rete:
+		* "Buffer" offerto dalla rete
+		* Dedotta da ritardi e perdite
+
+### Controllo di congestione TCP
+Algoritmo **additive increase - multiplicative decrease** (**AIMD**)
+* **Approccio**: Cerco di usare quanta più banda possibile, fino a quando non ci sono perdite
+* Trasmettitore continua ad incrementare `cwnd` di 1 MSS per ogni RTT
+* Se trasmettitore rileva perdita `cwnd/=2`
+
+### TCP slow start
+Nel caso di connessione TCP appena aperta:
+* *Problema*: Arrivare alla `cwnd` "di picco" è lento con *AIMD*
+* *Soluzione*: Algoritmo dello **slow start**:
+	1. Si raddoppia `cwnd` per ogni RTT (crescita esponenziale)
+	1. Se avviene perdita:
+		- **Dovuta a timeout**:
+			* Segmenti persi / ACK persi
+			* Congestione elevata
+			* Reset: `cwnd=1`
+			* Riprendo slow start
+		- **3 ACK duplicati**:
+			* Segmenti persi
+			* Ricevo ancora gli ACK
+			* Il traffico viaggia, ma si va verso la congestione
+			* Situazione non grave
+			* Dimezzo `cwnd`
+			* Poi cresco linearmente => *AIMD*
+* Slow start procede fino ad un certo **threshold**:
+	* Threshold settato a `cwnd/2` quando avviene perdita
+
+## Fairness
+* TCP è un **protocollo fair**:
+	* K connessioni TCP usano lo stesso canale
+	* Il canale ha un collo di bottiglia a rate R
+	* Tutte le connessioni vanno a R/K (mediamente)
+* Nel caso di UDP, non essendoci controllo di congestione, "ruba" banda a TCP
