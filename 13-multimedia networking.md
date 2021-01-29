@@ -12,6 +12,8 @@ Tre tipi di applicazioni multimediali:
 	* **Playout delay**:
 		* Ritardo tra ricezione pacchetto e playout
 		* Utilizzato per "tamponare" il jitter successivo
+* Content provider usano **CDN** (**Content Delivery Network**):
+	* Più server dislocati geograficamente
 
 ### Dynamic Adaptive Streaming over HTTP (DASH)
 * Server divide contenuti in chunk
@@ -22,8 +24,6 @@ Tre tipi di applicazioni multimediali:
 
 ## Streaming di contenuti live
 * Spesso usano DASH
-* Content provider usano **CDN** (**Content Delivery Network**),:
-	* Più server dislocati geograficamente
 
 ## Applicazioni interattive (VOIP)
 * Ritardo deve essere basso
@@ -46,13 +46,11 @@ Tre tipi di applicazioni multimediali:
 	* **Numero di sequenza** (tipo TCP)
 	* **Tipo di payload**: codifica audio o video
 	* **Timestamp**
-	* **SSRC**: ID dello stream
 * Nessun QoS (IP non ha QoS)
 
 ### Session Initiation Protocol (SIP)
-* Usato per creare, modificare e terminare sessioni
+* Usato per creare, modificare e terminare sessioni (segnalazione)
 * Prevede:
-	* Segnalazione
 	* Possibilità di modifica IP/porta durante la chiamata
 	* Aggiunta di partecipanti
 	* Aggiunta di uno stream
@@ -70,28 +68,22 @@ Tre tipi di applicazioni multimediali:
 			1. Stream disponibili
 	* **REGISTER**:
 		* Client invia a server SIP il proprio IP
+	* **RINGING**
+	* **BYE**
 * **SIP Server**: gestisce mapping *"mail" destinatario* <=> *IP destinatario*
 	* Due modalità di funzionamento:
 		1. **Registrar**: 
 			1. Utente accede al client SIP
 			1. Client invia messaggio REGISTER
-		1. **Proxy**:
+		1. **Proxy** (simile SMTP):
 			1. A manda attraverso il suo proxy server *INVITE* a B
 			1. Proxy server di A instrada *INVITE* a proxy server di B
 			1. B risponde
 			1. Risposta segue percorso inverso
 
 #### Percorso SIP
-A chiama B, diverse "fasi":
-1. A->B: invio di *INVITE*
-1. A<-B: invio di *RINGING*
-1. A<-B: Invio di *OK* quando B "alza la cornetta"
-1. A->B: Invio di *ACK*
-1. Flow dei dati (es. con RTP)
-1. A->B (A<-B): Invio di *BYE*
-1. A<-B (A->B): Invio di *OK*
 
-* Schema di comunicazione A - Server - Server - B
+* Schema di comunicazione A - Proxy di A - Proxy di B - B
 * Detto a **trapezoide**:
 	* Prima passo dai server (per l'instaurazione)
 	* Poi uso la base del trapezio (per dialogo A<->B)
