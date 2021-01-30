@@ -5,7 +5,7 @@
 * A livello applicazione
 
 ## Gearchia dei server
-![DNS](img/DNS.webp)
+![DNS](img/dns.webp)
 1. **Root name server**
 1. **TLD** (**Top Level Domain**) server:
 	* Gestiscono domini di primo livello (.com, .org, ...)
