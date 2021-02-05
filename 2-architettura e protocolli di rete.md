@@ -58,8 +58,8 @@
 ### Creazione di PDU
 Possibilità di: 
 1. **Segmentazione**: in due modi:
-    * spezzo la N-SDU e creo più N-PDU, N+1 riceve N-PDU della dimensione giusta
-    * spezzo la N-PDU e creo più (N+1)-SDU allo strato N+1
+    * spezzo la N-SDU e creo più N-PDU, N-1 riceve N-PDU della dimensione giusta
+    * spezzo la N-PDU e creo più (N-1)-SDU allo strato N-1
     * ovvero la segmentazione può essere fatta sia da chi sà di fornire una PDU troppo grossa, sia da chi riceve una PDU troppo grossa
 1. **Concatenazione**: operazione inversa alla segmentazione
 
